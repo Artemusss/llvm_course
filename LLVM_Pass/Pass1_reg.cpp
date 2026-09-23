@@ -26,7 +26,7 @@ PassPluginLibraryInfo getPassPluginInfo() {
                 "registerPipelineStartEPCallback\n";
       return true;
     });
-    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto) {
+    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto, auto) {
       outs() << "Add pass to ModulePassManager in "
                 "registerOptimizerLastEPCallback\n";
       return true;

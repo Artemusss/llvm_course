@@ -1,6 +1,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
+#include <llvm-20/llvm/IR/Constants.h>
 using namespace llvm;
 
 struct MyModPass : public PassInfoMixin<MyModPass> {
@@ -28,7 +29,7 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
         }
 
         for (auto &I : B) {
-          outs() << "\n##[Instruction]\n";
+          outs() << "\n##[Instruction] " << I.getOpcodeName() << "\n";
           I.print(outs(), true);
           outs() << "\n##[Users]\n";
           for (auto &U : I.uses()) {
@@ -38,8 +39,14 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
           }
           outs() << "##[Operands]\n";
           for (auto &U : I.operands()) {
-            Value *use = U.get();
-            use->print(outs(), true);
+            Value *op = U.get();
+            op->getType()->print(outs());
+            outs() << ' ';
+            if (auto *ConstInt = dyn_cast<ConstantInt>(op)) {
+              ConstInt->getValue().print(outs(), true);
+            }
+            outs() << ':';
+            op->print(outs(), true);
             outs() << '\n';
           }
         }
@@ -57,7 +64,7 @@ PassPluginLibraryInfo getPassPluginInfo() {
       MPM.addPass(MyModPass{});
       return true;
     });
-    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto) {
+    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto, auto) {
       MPM.addPass(MyModPass{});
       return true;
     });

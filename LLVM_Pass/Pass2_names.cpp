@@ -34,7 +34,7 @@ PassPluginLibraryInfo getPassPluginInfo() {
       MPM.addPass(MyModPass{});
       return true;
     });
-    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto) {
+    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto, auto) {
       outs() << "Add pass to ModulePassManager in "
                 "registerOptimizerLastEPCallback\n";
       MPM.addPass(createModuleToFunctionPassAdaptor(MyFuncPass{}));

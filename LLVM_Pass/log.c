@@ -8,8 +8,8 @@ void callLogger(char *callerName, char *calleeName, long int valID) {
   printf("[LOG] CALL '%s' -> '%s' {%ld}\n", callerName, calleeName, valID);
 }
 
-void resIntLogger(long int res, long int valID) {
-  printf("[LOG] Result %ld {%ld}\n", res, valID);
+void resIntLogger(long int res, char *calleeName, long int valID) {
+  printf("[LOG] Result %ld from '%s' {%ld}\n", res, calleeName, valID);
 }
 
 void funcEndLogger(char *funcName, long int valID) {

@@ -26,11 +26,12 @@ int main() {
   builder.SetInsertPoint(entry);
 
   // @0 = private unnamed_addr constant [13 x i8] c"hello world!\00", align 1
-  Value *helloWorld = builder.CreateGlobalStringPtr("hello world!");
+  Value *helloWorld = builder.CreateGlobalString("hello world!");
 
   // declare i32 @puts(i8*)
-  Type *int8PtrType = Type::getInt8Ty(context)->getPointerTo();
-  ArrayRef<Type *> argsRef(int8PtrType);
+  Type *int8Ty = Type::getInt8Ty(context);
+  Type *int8PtrTy = PointerType::get(int8Ty, 0);
+  ArrayRef<Type *> argsRef(int8PtrTy);
   FunctionType *putsType =
       FunctionType::get(builder.getInt32Ty(), argsRef, false);
   FunctionCallee putsFunc = module->getOrInsertFunction("puts", putsType);

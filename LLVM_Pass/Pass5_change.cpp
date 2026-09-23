@@ -13,7 +13,7 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
     LLVMContext &Ctx = M.getContext();
     IRBuilder<> builder(Ctx);
     bool changed = false;
-    std::list<Instruction *> RemoveInstrs;
+    std::vector<Instruction *> RemoveInstrs;
     for (auto &F : M) {
       outs() << "[Function] " << F.getName() << " (arg_size: " << F.arg_size()
              << ")\n";
@@ -44,8 +44,11 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
             }
             // 2 variants for removing (only RemoveInstrs works):
             // I.eraseFromParent();
-            // RemoveInstrs.push_back(&I);
+            RemoveInstrs.push_back(&I);
             changed = true;
+            outs() << "New instruction:\n";
+            sub->print(outs(), true);
+            outs() << "\n\n";
           }
         }
       }

@@ -39,7 +39,7 @@ PassPluginLibraryInfo getPassPluginInfo() {
       MPM.addPass(MyModPass{});
       return true;
     });
-    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto) {
+    PB.registerOptimizerLastEPCallback([](ModulePassManager &MPM, auto, auto) {
       MPM.addPass(MyModPass{});
       return true;
     });

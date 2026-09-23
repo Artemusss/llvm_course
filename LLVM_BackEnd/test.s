@@ -1,5 +1,5 @@
-	.text
 	.file	"test.ll"
+	.text
 	.globl	main                            ; -- Begin function main
 	.type	main,@function
 main:                                   ; @main

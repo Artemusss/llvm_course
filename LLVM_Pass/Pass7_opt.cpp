@@ -80,14 +80,8 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
                   outs() << "\t Load Users: ";
                   UseInst->print(outs(), true);
                   outs() << '\n';
-                  for (int i = 0; i < UseInst->getNumOperands(); i++) {
-                    if (UseInst->getOperand(i) == Load) {
-                      UseInst->setOperand(i, Val);
-                    }
-                  }
-                  outs() << "\t Fixed Load Users: ";
-                  UseInst->print(outs(), true);
-                  outs() << '\n';
+                  User *user = U.getUser(); // A User is anything with operands.
+                  user->setOperand(U.getOperandNo(), Val);
                 }
                 Load->eraseFromParent();
               }

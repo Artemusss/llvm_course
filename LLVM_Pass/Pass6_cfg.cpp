@@ -19,7 +19,7 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
 
   bool insertFuncStartLog(Module &M, Function &F, IRBuilder<> &builder) {
     // Prepare funcStartLogger function
-    ArrayRef<Type *> funcStartParamTypes = {int8PtrTy};
+    std::vector<Type *> funcStartParamTypes = {int8PtrTy};
     FunctionType *funcStartLogFuncType =
         FunctionType::get(voidType, funcStartParamTypes, false);
     FunctionCallee funcStartLogFunc =
@@ -28,7 +28,7 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
     // Insert a call to funcStartLogger function in the function begin
     BasicBlock &entryBB = F.getEntryBlock();
     builder.SetInsertPoint(&entryBB.front());
-    Value *funcName = builder.CreateGlobalStringPtr(F.getName());
+    Value *funcName = builder.CreateGlobalString(F.getName());
     Value *args[] = {funcName};
     builder.CreateCall(funcStartLogFunc, args);
 
@@ -37,14 +37,14 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
 
   bool insertCallLog(Module &M, Function &F, IRBuilder<> &builder) {
     // Prepare callLogger function
-    ArrayRef<Type *> callParamTypes = {int8PtrTy, int8PtrTy, int64Ty};
+    std::vector<Type *> callParamTypes = {int8PtrTy, int8PtrTy, int64Ty};
     FunctionType *callLogFuncType =
         FunctionType::get(voidType, callParamTypes, false);
     FunctionCallee callLogFunc =
         M.getOrInsertFunction("callLogger", callLogFuncType);
 
     // Prepare resIntLogger function
-    ArrayRef<Type *> resIntParamTypes = {int64Ty, int64Ty};
+    std::vector<Type *> resIntParamTypes = {int64Ty, int8PtrTy, int64Ty};
     FunctionType *resIntLogFuncType =
         FunctionType::get(voidType, resIntParamTypes, false);
     FunctionCallee resIntLogFunc =
@@ -54,25 +54,25 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
     // Insert loggers for call, binOpt and ret instructions
     for (auto &B : F) {
       for (auto &I : B) {
-        Value *valueAddr = ConstantInt::get(int64Ty, (int64_t)(&I));
         if (auto *call = dyn_cast<CallInst>(&I)) {
+          Value *valueAddr = ConstantInt::get(int64Ty, (int64_t)(&call));
           // Insert before call
           builder.SetInsertPoint(call);
 
           // Insert a call to callLogger function
           Function *callee = call->getCalledFunction();
           if (callee && !isFuncLogger(callee->getName())) {
-            Value *calleeName =
-                builder.CreateGlobalStringPtr(callee->getName());
-            Value *funcName = builder.CreateGlobalStringPtr(F.getName());
+            Value *calleeName = builder.CreateGlobalString(callee->getName());
+            Value *funcName = builder.CreateGlobalString(F.getName());
             Value *args[] = {funcName, calleeName, valueAddr};
             builder.CreateCall(callLogFunc, args);
             Inserted = true;
 
             // Insert result dump
-            if (!call->getType()->isVoidTy()) {
+            if (call->getType()->isIntegerTy()) {
               builder.SetInsertPoint(call->getNextNode());
-              Value *resArgs[] = {call, valueAddr};
+              Value *intRes = builder.CreateZExtOrTrunc(call, int64Ty);
+              Value *resArgs[] = {intRes, calleeName, valueAddr};
               builder.CreateCall(resIntLogFunc, resArgs);
             }
           }
@@ -84,7 +84,7 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
 
   bool insertFuncEndLog(Module &M, Function &F, IRBuilder<> &builder) {
     // Prepare funcEndLogger function
-    ArrayRef<Type *> funcEndParamTypes = {int8PtrTy, int64Ty};
+    std::vector<Type *> funcEndParamTypes = {int8PtrTy, int64Ty};
     FunctionType *funcEndLogFuncType =
         FunctionType::get(voidType, funcEndParamTypes, false);
     FunctionCallee funcEndLogFunc =
@@ -94,13 +94,13 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
     // Insert loggers for call, binOpt and ret instructions
     for (auto &B : F) {
       for (auto &I : B) {
-        Value *valueAddr = ConstantInt::get(int64Ty, (int64_t)(&I));
         if (auto *ret = dyn_cast<ReturnInst>(&I)) {
+          Value *valueAddr = ConstantInt::get(int64Ty, (int64_t)(&ret));
           // Insert before ret
           builder.SetInsertPoint(ret);
 
           // Insert a call to funcEndLogFunc function
-          Value *funcName = builder.CreateGlobalStringPtr(F.getName());
+          Value *funcName = builder.CreateGlobalString(F.getName());
           Value *args[] = {funcName, valueAddr};
           builder.CreateCall(funcEndLogFunc, args);
           Inserted = true;
@@ -112,7 +112,7 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
 
   bool insertBinOptLog(Module &M, Function &F, IRBuilder<> &builder) {
     // Prepare binOptLogger function
-    ArrayRef<Type *> binOptParamTypes = {int32Ty,   int32Ty,   int32Ty,
+    std::vector<Type *> binOptParamTypes = {int32Ty,   int32Ty,   int32Ty,
                                          int8PtrTy, int8PtrTy, int64Ty};
     FunctionType *binOptLogFuncType =
         FunctionType::get(voidType, binOptParamTypes, false);
@@ -123,8 +123,8 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
     // Insert loggers for call, binOpt and ret instructions
     for (auto &B : F) {
       for (auto &I : B) {
-        Value *valueAddr = ConstantInt::get(int64Ty, (int64_t)(&I));
         if (auto *op = dyn_cast<BinaryOperator>(&I)) {
+          Value *valueAddr = ConstantInt::get(int64Ty, (int64_t)(&op));
           // Insert after op
           builder.SetInsertPoint(op);
           builder.SetInsertPoint(&B, ++builder.GetInsertPoint());
@@ -133,8 +133,8 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
           // Insert a call to binOptLogFunc function
           Value *lhs = op->getOperand(0);
           Value *rhs = op->getOperand(1);
-          Value *funcName = builder.CreateGlobalStringPtr(F.getName());
-          Value *opName = builder.CreateGlobalStringPtr(op->getOpcodeName());
+          Value *funcName = builder.CreateGlobalString(F.getName());
+          Value *opName = builder.CreateGlobalString(op->getOpcodeName());
           Value *args[] = {op, lhs, rhs, opName, funcName, valueAddr};
           builder.CreateCall(binOptLogFunc, args);
           Inserted = true;
@@ -151,7 +151,8 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
     LLVMContext &Ctx = M.getContext();
     IRBuilder<> builder(Ctx);
     voidType = Type::getVoidTy(Ctx);
-    int8PtrTy = Type::getInt8Ty(Ctx)->getPointerTo();
+    Type *int8Ty = Type::getInt8Ty(Ctx);
+    int8PtrTy = PointerType::get(int8Ty, 0);
     int32Ty = Type::getInt32Ty(Ctx);
     int64Ty = Type::getInt64Ty(Ctx);
 
@@ -177,7 +178,6 @@ struct MyModPass : public PassInfoMixin<MyModPass> {
         outs() << "insertBinOptLog done\n";
       }
 
-      outs() << '\n';
       bool verif = verifyFunction(F, &outs());
       outs() << "[VERIFICATION] " << (verif ? "FAIL\n\n" : "OK\n\n");
     }

@@ -27,20 +27,32 @@ ninja -C build -j 8 llc
 ./build/bin/llc --version
 ./build/bin/llc -help-hidden
 ```
-Sim target adding example: https://github.com/lisitsynSA/llvm-add-backend (sim_backend_20.1.0 branch)
+Edu target adding example: https://github.com/lisitsynSA/llvm-add-backend (edu_backend_22.1.0 branch)
 
 # Steps for custom FrontEnd
 ### 1) Registered
-#### [Sim] 1. Register a new Sim architecture BackEnd:
-+ Add Sim to LLVM info
-+ CMakeLists.txt  MCTargetDesc  Sim.h  SimTargetMachine.cpp  SimTargetMachine.h  TargetInfo
+#### [Edu] 1. Register a new empty Edu architecture BackEnd:
++ Add Edu to LLVM info
++ CMakeLists.txt MCTargetDesc TargetInfo Edu.h
++ LLVMInitializeEduTargetInfo LLVMInitializeEduTarget LLVMInitializeEduTargetMC
+#### Release build:
 ```
-.../llvm-project/build/bin/llc --version
+cmake -S llvm -B build -G Ninja -DLLVM_USE_LINKER=lld -DCMAKE_INSTALL_PREFIX=install -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_TARGETS_TO_BUILD=Edu -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang"
+ninja -C build -j 8 llc
+./build/bin/llc --version
   ...
   Registered Targets:
-    sim - Simulator target for LLVM course
+    (none)
 ```
-### 2) Generate simple ASM
+#### Debug build:
++ Edu.h #define EDU_STACKTRACE
+```
+sudo apt install libboost-stacktrace-dev
+cmake -S llvm -B build_debug -G Ninja -DLLVM_USE_LINKER=lld -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_TARGETS_TO_BUILD=Edu -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-lboost_stacktrace_backtrace" -DCMAKE_C_FLAGS="-lboost_stacktrace_backtrace"
+ninja -C build_debug -j 8 llc
+./build_debug/bin/llc --version
+```
+#### Run LLC:
 test.ll:
 ```
 define dso_local i32 @main() {
@@ -48,8 +60,25 @@ define dso_local i32 @main() {
 }
 ```
 ```
-.../llvm-project/build/bin/llc test.ll -march sim -debug
+./build_debug/bin/llc -march edu test.ll -debug
+./build/bin/llc -march edu test.ll -debug
 ```
+>ERROR: ./build/bin/llc: error: invalid target 'edu'.
+#### [Edu] 2. Register Edu Target:
++ RegisterTarget
+```
+./build/bin/llc --version
+  ...
+  Registered Targets:
+    edu - Educational target for LLVM course
+```
+>ERROR: Assertion `Target && "Could not allocate target machine!"'
+### 2) Generate simple ASM
+#### [Edu] 3. Register Edu TargetMachine
++ EduTargetMachine
+>ERROR: void llvm::TargetPassConfig::addPassesToHandleExceptions(): Assertion `MCAI && "No MCAsmInfo"'
+
+
 #### [Sim] 2. Add Register Info for Sim architecture:
 >ERROR: void llvm::TargetPassConfig::addPassesToHandleExceptions(): Assertion `MCAI && "No MCAsmInfo"' failed.
 + Sim/SimTargetMachine.cpp SimTargetMachine +initAsmInfo();

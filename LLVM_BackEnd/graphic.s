@@ -1,13 +1,13 @@
-	.text
 	.file	"graphic.ll"
+	.text
 	.globl	app                             ; -- Begin function app
 	.type	app,@function
 app:                                    ; @app
 ; %bb.0:                                ; %entry
 	MOVhi r2 65535
 	ORi r2 r2 65535
-	MOVli r9 5
-	PUTPIXEL r9 r9 r2
+	MOVli r4 5
+	PUTPIXEL r4 r4 r2
 	FLUSH
 	BR r0
 .Lfunc_end0:
