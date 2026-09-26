@@ -4,3 +4,4 @@
 *.out
 *.bc
 .vscode
+SDL/water/app_water
