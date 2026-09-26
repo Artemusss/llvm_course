@@ -29,8 +29,6 @@
 | `app_water.c` | модуль логики — расчёт кадра |
 | `app_water.ll` | **обычный** (неоптимизированный) LLVM IR — `clang -emit-llvm -S app_water.c` |
 | `app_water-opt.ll` | **оптимизированный** LLVM IR, `-O2` (артефакт доп. задания) — `clang -emit-llvm -S -O2 app_water.c` |
-| `results/water_ripple.gif` | запись работы |
-| `results/water_preview.png` | один кадр |
 
 Разница IR: в обычном — вся память как `alloca`/`load`/`store`, операции по
 одной; в оптимизированном тот же расчёт **векторизован** (SIMD, `<N x i32>`) и
