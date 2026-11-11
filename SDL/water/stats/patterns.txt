@@ -1,0 +1,131 @@
+# Анализ паттернов трассы use-записей (User <- Operand)
+Файл трассы : build/trace.log
+Всего записей (токенов): 18494471
+Уникальных записей (n=1): 58
+Окна: 1..5; топ-20 на окно
+
+========================================================================
+[окно = 1 инстр.]  различных паттернов: 58  всего окон: 18494471
+------------------------------------------------------------------------
+       count     доля  паттерн
+     3407874   18.43%  call <- add
+     1572864    8.50%  call <- mul
+     1121761    6.07%  load <- getelementptr
+     1048576    5.67%  add <- mul
+      690969    3.74%  add <- add
+      591344    3.20%  sub <- load
+      556315    3.01%  icmp <- add
+      524800    2.84%  or <- and
+      524288    2.83%  add <- ashr
+      524288    2.83%  or <- or
+      523776    2.83%  call <- trunc
+      329200    1.78%  ashr <- sub
+      328688    1.78%  ashr <- add
+      300228    1.62%  getelementptr <- getelementptr
+      294664    1.59%  br <- icmp
+      293685    1.59%  add <- shl
+      293636    1.59%  or <- add
+      293636    1.59%  add <- or
+      268273    1.45%  add <- load
+      268240    1.45%  getelementptr <- or
+
+========================================================================
+[окно = 2 инстр.]  различных паттернов: 134  всего окон: 18494470
+------------------------------------------------------------------------
+       count     доля  паттерн
+     2097153   11.34%  call <- add  ,  call <- add
+      786432    4.25%  call <- mul  ,  add <- mul
+      524288    2.83%  call <- add  ,  call <- mul
+      524288    2.83%  call <- mul  ,  call <- add
+      524288    2.83%  add <- mul  ,  call <- add
+      524288    2.83%  add <- mul  ,  call <- mul
+      294670    1.59%  add <- add  ,  icmp <- add
+      294663    1.59%  icmp <- add  ,  br <- icmp
+      292616    1.58%  br <- icmp  ,  or <- add
+      265192    1.43%  getelementptr <- or  ,  load <- getelementptr
+      262144    1.42%  load <- getelementptr  ,  sub <- load
+      262144    1.42%  load <- getelementptr  ,  ashr <- load
+      262144    1.42%  add <- add  ,  add <- ashr
+      262144    1.42%  sub <- load  ,  sub <- load
+      262144    1.42%  ashr <- sub  ,  add <- add
+      262144    1.42%  getelementptr <- ashr  ,  load <- getelementptr
+      262144    1.42%  and <- shl  ,  mul <- call
+      262144    1.42%  or <- and  ,  or <- and
+      262144    1.42%  or <- and  ,  or <- or
+      262144    1.42%  ashr <- load  ,  add <- ashr
+
+========================================================================
+[окно = 3 инстр.]  различных паттернов: 182  всего окон: 18494469
+------------------------------------------------------------------------
+       count     доля  паттерн
+     1572864    8.50%  call <- add  ,  call <- add  ,  call <- add
+      524288    2.83%  call <- add  ,  call <- mul  ,  add <- mul
+      524288    2.83%  call <- mul  ,  call <- add  ,  call <- add
+      524288    2.83%  call <- mul  ,  add <- mul  ,  call <- add
+      524288    2.83%  add <- mul  ,  call <- add  ,  call <- mul
+      524288    2.83%  add <- mul  ,  call <- mul  ,  call <- add
+      294663    1.59%  add <- add  ,  icmp <- add  ,  br <- icmp
+      292616    1.58%  icmp <- add  ,  br <- icmp  ,  or <- add
+      262144    1.42%  load <- getelementptr  ,  sub <- load  ,  sub <- load
+      262144    1.42%  load <- getelementptr  ,  ashr <- load  ,  add <- ashr
+      262144    1.42%  add <- add  ,  add <- ashr  ,  call <- add
+      262144    1.42%  ashr <- sub  ,  add <- add  ,  add <- ashr
+      262144    1.42%  and <- shl  ,  mul <- call  ,  and <- mul
+      262144    1.42%  or <- and  ,  or <- and  ,  or <- or
+      262144    1.42%  or <- and  ,  or <- or  ,  or <- call
+      262144    1.42%  ashr <- load  ,  add <- ashr  ,  ashr <- sub
+      262144    1.42%  add <- ashr  ,  ashr <- sub  ,  add <- add
+      262144    1.42%  add <- ashr  ,  call <- add  ,  call <- call
+      262144    1.42%  call <- add  ,  call <- add  ,  add <- mul
+      262144    1.42%  call <- add  ,  call <- call  ,  shl <- call
+
+========================================================================
+[окно = 4 инстр.]  различных паттернов: 222  всего окон: 18494468
+------------------------------------------------------------------------
+       count     доля  паттерн
+     1048576    5.67%  call <- add  ,  call <- add  ,  call <- add  ,  call <- add
+      524288    2.83%  call <- mul  ,  call <- add  ,  call <- add  ,  call <- add
+      524288    2.83%  call <- mul  ,  add <- mul  ,  call <- add  ,  call <- mul
+      524288    2.83%  add <- mul  ,  call <- add  ,  call <- mul  ,  add <- mul
+      524288    2.83%  add <- mul  ,  call <- mul  ,  call <- add  ,  call <- add
+      292616    1.58%  add <- add  ,  icmp <- add  ,  br <- icmp  ,  or <- add
+      262144    1.42%  load <- getelementptr  ,  ashr <- load  ,  add <- ashr  ,  ashr <- sub
+      262144    1.42%  add <- add  ,  add <- ashr  ,  call <- add  ,  call <- call
+      262144    1.42%  ashr <- sub  ,  add <- add  ,  add <- ashr  ,  call <- add
+      262144    1.42%  and <- shl  ,  mul <- call  ,  and <- mul  ,  or <- and
+      262144    1.42%  or <- and  ,  or <- and  ,  or <- or  ,  or <- call
+      262144    1.42%  or <- and  ,  or <- or  ,  or <- call  ,  or <- or
+      262144    1.42%  ashr <- load  ,  add <- ashr  ,  ashr <- sub  ,  add <- add
+      262144    1.42%  add <- ashr  ,  ashr <- sub  ,  add <- add  ,  add <- ashr
+      262144    1.42%  add <- ashr  ,  call <- add  ,  call <- call  ,  shl <- call
+      262144    1.42%  call <- add  ,  call <- add  ,  call <- add  ,  add <- mul
+      262144    1.42%  call <- add  ,  call <- add  ,  add <- mul  ,  call <- mul
+      262144    1.42%  call <- add  ,  call <- call  ,  shl <- call  ,  and <- shl
+      262144    1.42%  call <- add  ,  call <- mul  ,  add <- mul  ,  call <- add
+      262144    1.42%  call <- add  ,  call <- mul  ,  add <- mul  ,  call <- mul
+
+========================================================================
+[окно = 5 инстр.]  различных паттернов: 248  всего окон: 18494467
+------------------------------------------------------------------------
+       count     доля  паттерн
+      524288    2.83%  call <- add  ,  call <- add  ,  call <- add  ,  call <- add  ,  call <- add
+      524288    2.83%  call <- mul  ,  call <- add  ,  call <- add  ,  call <- add  ,  call <- add
+      524288    2.83%  call <- mul  ,  add <- mul  ,  call <- add  ,  call <- mul  ,  add <- mul
+      524288    2.83%  add <- mul  ,  call <- mul  ,  call <- add  ,  call <- add  ,  call <- add
+      262144    1.42%  load <- getelementptr  ,  ashr <- load  ,  add <- ashr  ,  ashr <- sub  ,  add <- add
+      262144    1.42%  add <- add  ,  add <- ashr  ,  call <- add  ,  call <- call  ,  shl <- call
+      262144    1.42%  ashr <- sub  ,  add <- add  ,  add <- ashr  ,  call <- add  ,  call <- call
+      262144    1.42%  and <- shl  ,  mul <- call  ,  and <- mul  ,  or <- and  ,  or <- and
+      262144    1.42%  or <- and  ,  or <- and  ,  or <- or  ,  or <- call  ,  or <- or
+      262144    1.42%  or <- and  ,  or <- or  ,  or <- call  ,  or <- or  ,  trunc <- add
+      262144    1.42%  ashr <- load  ,  add <- ashr  ,  ashr <- sub  ,  add <- add  ,  add <- ashr
+      262144    1.42%  add <- ashr  ,  ashr <- sub  ,  add <- add  ,  add <- ashr  ,  call <- add
+      262144    1.42%  add <- ashr  ,  call <- add  ,  call <- call  ,  shl <- call  ,  and <- shl
+      262144    1.42%  call <- add  ,  call <- add  ,  call <- add  ,  call <- add  ,  add <- mul
+      262144    1.42%  call <- add  ,  call <- add  ,  call <- add  ,  add <- mul  ,  call <- mul
+      262144    1.42%  call <- add  ,  call <- add  ,  add <- mul  ,  call <- mul  ,  call <- add
+      262144    1.42%  call <- add  ,  call <- call  ,  shl <- call  ,  and <- shl  ,  mul <- call
+      262144    1.42%  call <- add  ,  call <- mul  ,  add <- mul  ,  call <- add  ,  call <- mul
+      262144    1.42%  call <- add  ,  call <- mul  ,  add <- mul  ,  call <- mul  ,  call <- add
+      262144    1.42%  call <- add  ,  add <- mul  ,  call <- mul  ,  call <- add  ,  call <- add
+

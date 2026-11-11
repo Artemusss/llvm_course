@@ -1,0 +1,172 @@
+; ============================================================================
+;  app_water.myasm — app_water.c (волны на воде), переписанный на мою ISA.
+;  Функции drop / step / render / shade / drawBlock встроены (inline);
+;  drop встречается дважды: начальная капля и капля раз в 16 кадров.
+;
+;  Память: Mem[0..131072) = buf1, Mem[131072..262144) = buf2
+;          (сетка W x H = 512 x 256, индекс клетки c = y*512 + x).
+;
+;  Регистры:
+;    r1  a    — база текущего буфера высот      r2  b — база предыдущего
+;    r3  t    — номер кадра                     r4  флаг цикла/условия
+;    r5  y    r6 x    r7 y*W                    r8..r15 временные
+;    r16 cx   r17 cy  — центр капли             r18 i   r19 j — смещения капли
+;  Описание инструкций — ISA.md.
+; ============================================================================
+
+entry
+    LDI    r1 0                 ; a = buf1
+    LDI    r2 131072            ; b = buf2
+    LDI    r3 0                 ; t = 0
+    LDI    r16 256              ; cx = W/2
+    LDI    r17 128              ; cy = H/2
+
+; ---- drop(a, W/2, H/2, DROP_H) — начальная капля --------------------------
+    LDI    r19 -3               ; j = -DROP_R
+d0_j
+    LDI    r18 -3               ; i = -DROP_R
+d0_i
+    ADD    r8 r16 r18           ; x = cx + i
+    ADD    r9 r17 r19           ; y = cy + j
+    ADDI   r10 r8 -1
+    CMPLTUI r10 r10 510         ; 0 < x < W-1   <=>  (x-1) <u W-2
+    ADDI   r11 r9 -1
+    CMPLTUI r11 r11 254         ; 0 < y < H-1   <=>  (y-1) <u H-2
+    AND    r10 r10 r11
+    BZ     r10 d0_skip
+d0_add
+    SHLI   r12 r9 9             ; y*W
+    ADD    r12 r12 r8           ; + x
+    ADD    r12 r12 r1           ; &a[y*W + x]
+    LD     r13 r12 0
+    ADDI   r13 r13 640          ; += DROP_H
+    ST     r13 r12 0
+d0_skip
+    INC_NE r4 r18 4             ; i++ ; i != DROP_R+1
+    BNZ    r4 d0_i
+d0_jnext
+    INC_NE r4 r19 4             ; j++ ; j != DROP_R+1
+    BNZ    r4 d0_j
+
+; ============================ while (1) =====================================
+main_loop
+; ---- step(a, b): b[c] = ((a[c-1]+a[c+1]+a[c-W]+a[c+W]) >> 1) - b[c];
+;                  b[c] -= b[c] >> DAMP      для y = 1..H-2, x = 1..W-2
+    LDI    r5 1                 ; y = 1
+st_y
+    LDI    r6 1                 ; x = 1
+    SHLI   r7 r5 9              ; y*W
+st_x
+    ADD    r8 r7 r6             ; c = y*W + x
+    ADD    r9 r8 r1             ; &a[c]
+    ADD    r10 r8 r2            ; &b[c]
+    LD     r11 r9 -1            ; a[c-1]
+    LD     r12 r9 1             ; a[c+1]
+    ADD    r11 r11 r12
+    LD     r12 r9 -512          ; a[c-W]
+    ADD    r11 r11 r12
+    LD     r12 r9 512           ; a[c+W]
+    ADD    r11 r11 r12
+    SHRI   r11 r11 1            ; >> 1
+    LD     r12 r10 0            ; b[c]
+    SUB    r11 r11 r12          ; v
+    SHRI   r12 r11 6            ; v >> DAMP
+    SUB    r11 r11 r12          ; v -= v >> DAMP
+    ST     r11 r10 0            ; b[c] = v
+    INC_NE r4 r6 511            ; x++ ; x != W-1
+    BNZ    r4 st_x
+st_ynext
+    INC_NE r4 r5 255            ; y++ ; y != H-1
+    BNZ    r4 st_y
+
+; ---- swap: a <-> b ----------------------------------------------------------
+swap
+    MOV    r8 r1
+    MOV    r1 r2
+    MOV    r2 r8
+
+; ---- render(a): для каждой клетки shade(h, slope) и drawBlock(x, y, argb) --
+    LDI    r5 0                 ; y = 0
+rn_y
+    LDI    r6 0                 ; x = 0
+    SHLI   r7 r5 9              ; y*W
+rn_x
+    ADD    r8 r7 r6             ; c
+    ADD    r8 r8 r1             ; &a[c]
+    ADDI   r9 r6 -1
+    CMPLTUI r9 r9 511           ; x > 0
+    SUB    r10 r8 r9            ; &a[cl], cl = x>0 ? c-1 : c
+    CMPLTUI r9 r6 511           ; x < W-1
+    ADD    r11 r8 r9            ; &a[cr], cr = x<W-1 ? c+1 : c
+    LD     r10 r10 0
+    LD     r11 r11 0
+    SUB    r10 r10 r11          ; slope = a[cl] - a[cr]
+    LD     r12 r8 0             ; h = a[c]
+; shade(h, slope)
+    SHRI   r12 r12 3            ; h >> 3
+    SHRI   r10 r10 1            ; slope >> 1
+    ADD    r12 r12 r10
+    ADDI   r12 r12 120          ; lum = 120 + (h>>3) + (slope>>1)
+    CLAMPI r12 r12 255          ; lum = clamp(lum, 0, 255)
+    SHRI   r13 r12 3            ; r = lum >> 3
+    MULI   r14 r12 5
+    SHRI   r14 r14 3            ; g = (lum*5) >> 3
+    SHLI   r13 r13 16
+    SHLI   r14 r14 8
+    OR     r13 r13 r14
+    OR     r13 r13 r12          ; | b (= lum)
+    ORI    r13 r13 -16777216    ; | 0xFF000000
+; drawBlock(x, y, argb)
+    PUTBLK r6 r5 r13
+    INC_NE r4 r6 512            ; x++ ; x != W
+    BNZ    r4 rn_x
+rn_ynext
+    INC_NE r4 r5 256            ; y++ ; y != H
+    BNZ    r4 rn_y
+
+frame
+    FLUSH                       ; simFlush()
+    ANDI   r8 r3 15             ; t % DROP_PERIOD
+    BNZ    r8 no_drop
+
+; ---- случайная капля: rx, ry = (simRand() & 0x3FFFFFFF) % (W|H - 8) + 4 ----
+rnd
+    RAND   r16
+    ANDI   r16 r16 1073741823
+    REMUI  r16 r16 504          ; % (W - 2*DROP_R - 2)
+    ADDI   r16 r16 4            ; + DROP_R + 1
+    RAND   r17
+    ANDI   r17 r17 1073741823
+    REMUI  r17 r17 248          ; % (H - 2*DROP_R - 2)
+    ADDI   r17 r17 4
+
+; ---- drop(a, rx, ry, DROP_H) -----------------------------------------------
+    LDI    r19 -3
+d1_j
+    LDI    r18 -3
+d1_i
+    ADD    r8 r16 r18
+    ADD    r9 r17 r19
+    ADDI   r10 r8 -1
+    CMPLTUI r10 r10 510
+    ADDI   r11 r9 -1
+    CMPLTUI r11 r11 254
+    AND    r10 r10 r11
+    BZ     r10 d1_skip
+d1_add
+    SHLI   r12 r9 9
+    ADD    r12 r12 r8
+    ADD    r12 r12 r1
+    LD     r13 r12 0
+    ADDI   r13 r13 640
+    ST     r13 r12 0
+d1_skip
+    INC_NE r4 r18 4
+    BNZ    r4 d1_i
+d1_jnext
+    INC_NE r4 r19 4
+    BNZ    r4 d1_j
+
+no_drop
+    ADDI   r3 r3 1              ; t++
+    JMP    main_loop

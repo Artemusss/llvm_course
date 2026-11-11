@@ -56,3 +56,23 @@ clang app_water-opt.ll ../start.c ../sim.c -lSDL2 -o app_water -O2
 
 `DAMP` — затухание (больше → волны живут дольше); `DROP_PERIOD` — кадры между
 каплями; `DROP_H` — сила всплеска; `SCALE` — грубость сетки.
+
+## Задание 2 — статистика использования IR-инструкций
+
+Трасса `User <- Operand` этого приложения (`-O2`, 18.5 млн записей) и частоты
+паттернов длины 1–5 — в [`stats/`](stats/README.md).
+
+## Задание 4 — своя ISA, ASM и ASM2IR
+
+[`asm/`](asm/README.md): набор инструкций по статистике задания 2
+([`asm/ISA.md`](asm/ISA.md)), приложение на своём ASM
+([`asm/app_water.myasm`](asm/app_water.myasm)) и симулятор с тремя режимами —
+симуляция (5*), IR с вызовами эмулирующих функций (3), полный IR (4) — с
+запуском на ExecutionEngine.
+
+```bash
+cd asm
+SIM=../../sim.c ./build.sh
+./run.sh 1      # 2 / 3 — другие режимы
+./run.sh check  # сверка всех режимов с app_water.c (без окна)
+```
